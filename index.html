@@ -58,42 +58,21 @@
             text-align: center;
             font-size: min(18px, 4vw);
         }
-        #touch-controls {
+        .mobile-only {
             display: none;
-            width: 100%;
-            max-width: 300px;
-            margin: 20px auto;
-        }
-        .touch-row {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin: 5px 0;
-        }
-        .touch-button {
-            width: 60px;
-            height: 60px;
-            background-color: #ff66b2;
-            border: none;
-            border-radius: 50%;
-            color: white;
-            font-size: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0.8;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .touch-button:active {
-            opacity: 1;
         }
         @media (max-width: 768px) {
-            #touch-controls {
+            .mobile-only {
                 display: block;
             }
             #controls {
                 display: none;
+            }
+            #mobile-instructions {
+                color: #ff4d94;
+                margin: 10px 0;
+                text-align: center;
+                font-size: min(18px, 4vw);
             }
         }
         .game-over {
@@ -122,18 +101,7 @@
         <div id="game-over" class="game-over">Game Over!</div>
     </div>
     <div id="controls">Use arrow keys to control the snake</div>
-    <div id="touch-controls">
-        <div class="touch-row">
-            <button class="touch-button" id="up-button">⬆️</button>
-        </div>
-        <div class="touch-row">
-            <button class="touch-button" id="left-button">⬅️</button>
-            <button class="touch-button" id="right-button">➡️</button>
-        </div>
-        <div class="touch-row">
-            <button class="touch-button" id="down-button">⬇️</button>
-        </div>
-    </div>
+    <div id="mobile-instructions" class="mobile-only">Swipe to control the snake</div>
     <script>
         const canvas = document.getElementById('game-board');
         const ctx = canvas.getContext('2d');
@@ -158,16 +126,50 @@
         // Handle keyboard controls
         document.addEventListener('keydown', changeDirection);
 
-        // Handle touch controls
-        document.getElementById('up-button').addEventListener('click', () => simulateKeyPress(UP_KEY));
-        document.getElementById('down-button').addEventListener('click', () => simulateKeyPress(DOWN_KEY));
-        document.getElementById('left-button').addEventListener('click', () => simulateKeyPress(LEFT_KEY));
-        document.getElementById('right-button').addEventListener('click', () => simulateKeyPress(RIGHT_KEY));
+        // Touch control variables
+        let touchStartX = 0;
+        let touchStartY = 0;
+        const minSwipeDistance = 30; // minimum distance for a swipe
 
-        // Prevent scrolling when touching the canvas
-        document.getElementById('game-board').addEventListener('touchstart', function(e) {
+        // Handle touch controls
+        document.getElementById('game-container').addEventListener('touchstart', function(e) {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
             e.preventDefault();
         }, { passive: false });
+
+        document.getElementById('game-container').addEventListener('touchmove', function(e) {
+            e.preventDefault();
+        }, { passive: false });
+
+        document.getElementById('game-container').addEventListener('touchend', function(e) {
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+            
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+            
+            // Determine if the swipe was primarily horizontal or vertical
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                // Horizontal swipe
+                if (Math.abs(deltaX) > minSwipeDistance) {
+                    if (deltaX > 0 && dx !== -1) {
+                        simulateKeyPress(RIGHT_KEY);
+                    } else if (deltaX < 0 && dx !== 1) {
+                        simulateKeyPress(LEFT_KEY);
+                    }
+                }
+            } else {
+                // Vertical swipe
+                if (Math.abs(deltaY) > minSwipeDistance) {
+                    if (deltaY > 0 && dy !== -1) {
+                        simulateKeyPress(DOWN_KEY);
+                    } else if (deltaY < 0 && dy !== 1) {
+                        simulateKeyPress(UP_KEY);
+                    }
+                }
+            }
+        });
 
         // Handle canvas resizing
         function resizeCanvas() {
