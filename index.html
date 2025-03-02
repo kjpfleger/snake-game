@@ -183,7 +183,7 @@
             scoreElement.innerHTML = `Score: ${score}`;
             dx = 1;
             dy = 0;
-            gameLoop = setInterval(drawGame, 100);
+            gameLoop = setInterval(drawGame, 200);  // Increased from 100ms to 200ms for slower movement
         }
 
         startGame();
